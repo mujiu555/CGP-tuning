@@ -18,7 +18,7 @@ The project directory is organized as follows:
 
 To run this project, ensure that the following dependencies are installed with the specified versions to ensure compatibility and optimal performance:
 
-- **python**: v3.11.9
+- **python**: v3.12.x
 - **transformers**: [v4.46.1](https://github.com/huggingface/transformers)
 - **trl**: [v0.11.0](https://github.com/huggingface/trl)
 - **peft**: [v0.13.2](https://github.com/huggingface/peft)
