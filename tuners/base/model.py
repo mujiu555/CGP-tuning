@@ -16,7 +16,7 @@ class BaseGraphPromptEncoder(nn.Module):
     def __init__(self, config):
         super().__init__()
         # Ablation settings validity check
-        if sum([config.ablate_node_type_embedding, config.ablate_edge_type_embedding, config.ablate_positional_embedding, config.ablate_cross_modal_alignment_module, config.ablate_multi_head_attn, config.ablate_projector]) > 1:
+        if sum([config.ablate_node_type_embeddings, config.ablate_edge_type_embeddings, config.ablate_positional_embedding, config.ablate_cross_modal_alignment_module, config.ablate_multi_head_attn, config.ablate_projector]) > 1:
             raise ValueError(
                 "Only one ablation setting can be True at a time."
             )
