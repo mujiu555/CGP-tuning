@@ -63,7 +63,6 @@ if __name__ == "__main__":
         cma_bias=False,
         ablate_cross_modal_alignment_module=False,
         ablate_multi_head_attn=False,
-        ablate_cross_modal_attention=False,
     )
     # peft model initialization
     peft_model = GraphPeftModelForCausalLM(config=config, base_model=base_model)
