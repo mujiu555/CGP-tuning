@@ -73,7 +73,11 @@ if __name__ == "__main__":
     data_sample = read_json_file("example.json")
 
     # process the graph
-    graph = from_networkx(nx.json_graph.node_link_graph(data_sample["graph"]))
+    # networkx v3.x expects "edges" but the JSON was serialized with the v2.x "links" key
+    graph_data = data_sample["graph"]
+    if "links" in graph_data and "edges" not in graph_data:
+        graph_data["edges"] = graph_data.pop("links")
+    graph = from_networkx(nx.json_graph.node_link_graph(graph_data))
     node_type_to_index = read_json_file("templates/node_type_to_index.json")
     edge_type_to_index = read_json_file("templates/edge_type_to_index.json")
     graph.label = torch.tensor([node_type_to_index[label] for label in graph.label])
