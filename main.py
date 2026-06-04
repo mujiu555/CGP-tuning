@@ -15,8 +15,10 @@ from utils.json_utils import read_json_file, write_json_file
 if __name__ == "__main__":
     torch.autograd.set_detect_anomaly(True)
     torch.backends.mkl.enabled = False  # Disable MKL optimizations
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     print("number of gpus", torch.cuda.device_count())
     print("number of cpus", os.cpu_count())
+    print(f"using device: {device}")
 
     # base model settings
     base_model_dir = "Qwen/Qwen2.5-Coder-7B" # "codellama/CodeLlama-7b-hf", "google/codegemma-7b"
@@ -112,16 +114,18 @@ if __name__ == "__main__":
     
     # forward pass
     with torch.no_grad():
-        with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
-            peft_model.to("cuda")
+        dtype = torch.bfloat16 if device == "cuda" else torch.float32
+        with torch.autocast(device_type=device, dtype=dtype):
+            peft_model.to(device)
             outputs = peft_model(
-                    input_ids=data["prompts"].to("cuda"), 
-                    attention_mask=data["prompt_attention_mask"].to("cuda"), 
-                    graphs=graph.to("cuda"),
+                    input_ids=data["prompts"].to(device),
+                    attention_mask=data["prompt_attention_mask"].to(device),
+                    graphs=graph.to(device),
                 )
-            
+
             # Constrained decoding
             logits = outputs.logits[:, -1, :] # get the last token logits
             true_token_id = tokenizer.convert_tokens_to_ids("true") # get the token id for true
             false_token_id = tokenizer.convert_tokens_to_ids("false") # get the token id for false
             results = logits[:, true_token_id] > logits[:, false_token_id] # get the y_pred
+            print(f"prediction results: {results}")
