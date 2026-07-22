@@ -266,75 +266,97 @@ def process_dataset_entry(
 
     # --- issue_code (vulnerable, target = 1) -------------------------------
     issue = raw["issue_code"]
-    issue_cpg_str = issue.get("cpg_graphson", "")
+    issue_cpg_str = (issue.get("cpg_graphson") or "").strip()
     if use_joern and joern_bin:
         logger.info("[%s] vul  – regenerating CPG via Joern", idx)
         issue_cpg_str = run_joern_parse(
             issue["source"], metadata["language"], joern_bin
         )
 
-    vul_graph, vul_skipped = graphson_to_node_link(
-        issue_cpg_str, node_type_index, edge_type_index, logger
-    )
-    vul_out = {
-        "func": issue["source"],
-        "target": 1,
-        "graph": vul_graph,
-    }
-    vul_path = os.path.join(output_dir, f"{idx}_vul.json")
-    with open(vul_path, "w") as f:
-        json.dump(vul_out, f)
-    logger.info(
-        "[%s] vul  → %s  (nodes=%d, edges=%d)",
-        idx,
-        vul_path,
-        len(vul_graph["nodes"]),
-        len(vul_graph["links"]),
-    )
-
-    metadata["vul"] = {
-        "file": f"{idx}_vul.json",
-        "num_nodes": len(vul_graph["nodes"]),
-        "num_edges": len(vul_graph["links"]),
-        "skipped_edge_labels": vul_skipped,
-        "file_hash": issue.get("file_hash"),
-    }
+    if not issue_cpg_str:
+        logger.warning("[%s] vul  – SKIPPED (empty cpg_graphson)", idx)
+        metadata["vul"] = {
+            "file": None,
+            "num_nodes": 0,
+            "num_edges": 0,
+            "skipped_edge_labels": {},
+            "file_hash": issue.get("file_hash"),
+            "skipped": True,
+            "reason": "empty cpg_graphson",
+        }
+    else:
+        vul_graph, vul_skipped = graphson_to_node_link(
+            issue_cpg_str, node_type_index, edge_type_index, logger
+        )
+        vul_out = {
+            "func": issue["source"],
+            "target": 1,
+            "graph": vul_graph,
+        }
+        vul_path = os.path.join(output_dir, f"{idx}_vul.json")
+        with open(vul_path, "w") as f:
+            json.dump(vul_out, f)
+        logger.info(
+            "[%s] vul  → %s  (nodes=%d, edges=%d)",
+            idx,
+            vul_path,
+            len(vul_graph["nodes"]),
+            len(vul_graph["links"]),
+        )
+        metadata["vul"] = {
+            "file": f"{idx}_vul.json",
+            "num_nodes": len(vul_graph["nodes"]),
+            "num_edges": len(vul_graph["links"]),
+            "skipped_edge_labels": vul_skipped,
+            "file_hash": issue.get("file_hash"),
+        }
 
     # --- fixed_code (safe, target = 0) ------------------------------------
     fixed = raw["fixed_code"]
-    fixed_cpg_str = fixed.get("cpg_graphson", "")
+    fixed_cpg_str = (fixed.get("cpg_graphson") or "").strip()
     if use_joern and joern_bin:
         logger.info("[%s] safe – regenerating CPG via Joern", idx)
         fixed_cpg_str = run_joern_parse(
             fixed["source"], metadata["language"], joern_bin
         )
 
-    safe_graph, safe_skipped = graphson_to_node_link(
-        fixed_cpg_str, node_type_index, edge_type_index, logger
-    )
-    safe_out = {
-        "func": fixed["source"],
-        "target": 0,
-        "graph": safe_graph,
-    }
-    safe_path = os.path.join(output_dir, f"{idx}_safe.json")
-    with open(safe_path, "w") as f:
-        json.dump(safe_out, f)
-    logger.info(
-        "[%s] safe → %s  (nodes=%d, edges=%d)",
-        idx,
-        safe_path,
-        len(safe_graph["nodes"]),
-        len(safe_graph["links"]),
-    )
-
-    metadata["safe"] = {
-        "file": f"{idx}_safe.json",
-        "num_nodes": len(safe_graph["nodes"]),
-        "num_edges": len(safe_graph["links"]),
-        "skipped_edge_labels": safe_skipped,
-        "file_hash": fixed.get("file_hash"),
-    }
+    if not fixed_cpg_str:
+        logger.warning("[%s] safe – SKIPPED (empty cpg_graphson)", idx)
+        metadata["safe"] = {
+            "file": None,
+            "num_nodes": 0,
+            "num_edges": 0,
+            "skipped_edge_labels": {},
+            "file_hash": fixed.get("file_hash"),
+            "skipped": True,
+            "reason": "empty cpg_graphson",
+        }
+    else:
+        safe_graph, safe_skipped = graphson_to_node_link(
+            fixed_cpg_str, node_type_index, edge_type_index, logger
+        )
+        safe_out = {
+            "func": fixed["source"],
+            "target": 0,
+            "graph": safe_graph,
+        }
+        safe_path = os.path.join(output_dir, f"{idx}_safe.json")
+        with open(safe_path, "w") as f:
+            json.dump(safe_out, f)
+        logger.info(
+            "[%s] safe → %s  (nodes=%d, edges=%d)",
+            idx,
+            safe_path,
+            len(safe_graph["nodes"]),
+            len(safe_graph["links"]),
+        )
+        metadata["safe"] = {
+            "file": f"{idx}_safe.json",
+            "num_nodes": len(safe_graph["nodes"]),
+            "num_edges": len(safe_graph["links"]),
+            "skipped_edge_labels": safe_skipped,
+            "file_hash": fixed.get("file_hash"),
+        }
 
     return metadata
 
